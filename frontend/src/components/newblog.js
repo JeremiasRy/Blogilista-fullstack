@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux'
 import { createBlog } from '../reducers/blogReducer'
 import { setNotification } from '../reducers/notificationReducer'
 import blogservice from '../services/blogs'
+import { Button } from 'react-bootstrap'
 
 const Newblogform = ({user}) => {
 
@@ -36,10 +37,10 @@ const Newblogform = ({user}) => {
       <h1>Addblog</h1>
       <div>
         <form onSubmit={addBlog} onReset={handleReset}>
-          Title: <input {...title}/><br></br>
-          Author: <input {...author}/><br></br>
-          URL: <input {...url}/><br></br>
-          <button type="submit" id="addButton">Add</button><button type="reset">reset</button>
+          <input {...title} placeholder='Title'/><br></br>
+          <input {...author} placeholder='Author'/><br></br>
+          <input {...url} placeholder='URL'/><br></br>
+          <Button variant='success' type="submit" id="addButton">Add</Button><Button type="reset">reset</Button>
         </form>
       </div>
     </>
