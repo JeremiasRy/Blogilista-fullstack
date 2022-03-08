@@ -49,5 +49,20 @@ const middleware = require('../utils/middleware')
     response.json(blog.toJSON()).end()
   })
 
+  blogRouter.post('/:id/comments', async (request, response) => {
+    const randId = () => {
+      return Math.floor(Math.random() * 1000000)
+    }
+    const blog = await Blog.findById(request.body.id)
+    console.log(blog)
+    const comment = {
+      comment: request.body.comment,
+      id: randId()
+    }
+    blog.comments.push(comment)
+    await blog.save()
+    response.json(blog.toJSON()).end()
+  })
+
 
 module.exports = blogRouter

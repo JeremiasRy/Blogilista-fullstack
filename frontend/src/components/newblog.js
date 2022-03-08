@@ -1,23 +1,45 @@
-import React, { useState } from 'react'
-const Newblogform = ({ createBlog }) => {
+import { useField } from '../hooks/index'
+import { useDispatch } from 'react-redux'
+import { createBlog } from '../reducers/blogReducer'
+import { setNotification } from '../reducers/notificationReducer'
+import blogservice from '../services/blogs'
 
-  const [newBlog, setNewBlog] = useState({ title: 'Title', author: 'Author', url: 'Url' })
+const Newblogform = ({user}) => {
+
+  blogservice.setToken(user.token)
+  const dispatch = useDispatch()
+  
+  const title = useField('text')
+  const author = useField('text')
+  const url = useField('text')
 
   const addBlog = (e) => {
     e.preventDefault()
-    createBlog(newBlog)
-    setNewBlog({ ...newBlog, title: 'title', author: 'author', url: 'url' })
+    const newBlog = {
+      title: title.value,
+      author: author.value,
+      url: url.value
+    }
+    dispatch(createBlog(newBlog))
+    dispatch(setNotification(`${title.value} added!`, 5))
+    handleReset()
+  }
+
+  const handleReset = () => {
+    title.onReset()
+    author.onReset()
+    url.onReset()
   }
 
   return (
     <>
       <h1>Addblog</h1>
       <div>
-        <form onSubmit={addBlog}>
-          <input type="text" id="title" value={newBlog.title} onChange={e => setNewBlog({ ...newBlog, title: e.target.value })}></input><br></br>
-          <input type="text" id="author" value={newBlog.author} onChange={e => setNewBlog({ ...newBlog, author: e.target.value })}></input><br></br>
-          <input type="text" id="url"value={newBlog.url} onChange={e => setNewBlog({ ...newBlog, url: e.target.value })}></input><br></br>
-          <button type="submit" id="addButton">Add</button>
+        <form onSubmit={addBlog} onReset={handleReset}>
+          Title: <input {...title}/><br></br>
+          Author: <input {...author}/><br></br>
+          URL: <input {...url}/><br></br>
+          <button type="submit" id="addButton">Add</button><button type="reset">reset</button>
         </form>
       </div>
     </>

@@ -1,12 +1,32 @@
-const Loginform = (props) => {
+import { useField } from '../hooks/index'
+import { useDispatch } from 'react-redux'
+import { userLogin } from '../reducers/loginReducer'
+import { Button } from 'react-bootstrap'
+
+
+const Loginform = () => {
+  const dispatch = useDispatch()
+
+  const username = useField('text')
+  const password = useField('password')
+
+  const handleLogin = async (event) => {
+    event.preventDefault()
+    const user = {
+      username: username.value,
+      password: password.value
+    }
+      dispatch(userLogin(user)) 
+  }
+  
   return (
     <>
       <h1>Log in</h1>
       <div>
-        <form onSubmit={props.handleLogin}>
-          <input type="text" id="inputUsername" value={props.username} onChange={({ target }) => props.setUsername(target.value)}></input><br></br>
-          <input type="password" id="inputPassword" value={props.password} onChange={({ target }) => props.setPassword(target.value)}></input><br></br>
-          <button type="submit" id="loginButton">Log in</button>
+        <form onSubmit={handleLogin}>
+          <input {...username} placeholder='Username'/><br></br>
+          <input {...password} placeholder='Password'/><br></br>
+          <Button variant='success' type="submit" id="loginButton">Log in</Button>
         </form>
       </div>
     </>
