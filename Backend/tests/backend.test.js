@@ -5,7 +5,7 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
-
+const User = require('../models/user')
 const api = supertest(app)
 
 beforeEach(async () => {
@@ -23,21 +23,29 @@ test('blogs are returned as json', async () => {
     .expect('Content-Type', /application\/json/)
 })
 
-test('delete specific blog', async () => {
-  const blogs = await helper.blogsInDb()
-  const blogToDeleteId = blogs[0].id
-  console.log(blogToDeleteId)
+test('send new user', async () => { //Tällä luon vain käyttäjän testejä varten
+  await User.deleteMany({})
   await api
-   .delete(`/api/blogs/${blogToDeleteId}`) 
-   const blogAtEnd = await helper.blogsInDb()
-   expect(blogAtEnd).toHaveLength(blogs.length - 1)
- })
+  .post('/api/users')
+  .send(helper.user)
+})
 
-describe('adding blogs', () => {
+
+describe('adding/deleting blogs', () => {
+  let currentUser = ''
+ beforeEach(async () => {  //Tällä testillä saan tokenin tuleviin testeihin
+    const user = { username: helper.user.username, password: helper.user.password }
+    const response = await api
+    .post('/api/login')
+    .send(user)
+
+    currentUser = response.body
+  })
   test('blog is posted to database', async () => {
     const blog = helper.testPostBlog
     await api
      .post('/api/blogs')
+     .set('authorization', `bearer ${currentUser.token}`)
      .send(blog)
      .expect(200)
      .expect('Content-Type', /application\/json/)
@@ -48,18 +56,33 @@ describe('adding blogs', () => {
      const title = blogAtEnd.map(b => b.title)
      expect(title).toContain('Täh')
     })
- 
+  test('delete specific blog', async () => { //testi ei toiminut aikaisemmin koska vain blogin luonut käyttäjä voi poistaa blogin!! 
+    const blogs = await helper.blogsInDb()   //joten tässä testissä eka lähetän blogin ja sitten poistan sen.
+    const blog = helper.testPostBlog  
+    const request = await api
+    .post('/api/blogs')
+    .set('authorization', `bearer ${currentUser.token}`)
+    .send(blog)
+
+    const blogToDelete = request.body.id
+
+    await api
+     .delete(`/api/blogs/${blogToDelete}`)
+     .set('authorization', `bearer ${currentUser.token}`)
+     .expect(204)
+     const blogAtEnd = await helper.blogsInDb()
+     expect(blogAtEnd).toHaveLength(blogs.length) //Mikä muuttaa testin vähän oudoksi koska lopussa listan pituus on sama kuin alussa.. 
+                                                  //Mutta sehän tarkoittaa että postaus ja poisto toimivat!
+   })
   test('if blogs likes are not defined set to 0', async () => {
   const blog = helper.likesUndefinedBlog
-  console.log(blog)
    await api
    .post('/api/blogs')
+   .set('authorization', `bearer ${currentUser.token}`)
    .send(blog)
-   
    const blogsAtend = await helper.blogsInDb()
    expect(blogsAtend[(blogsAtend.length - 1)].likes).toBe(0)
   })
-  
   test('_id is set to id', async () => {
   const blog = helper.testPostBlog
   await api
@@ -69,7 +92,6 @@ describe('adding blogs', () => {
    const blogAtEnd = await helper.blogsInDb()
    expect(blogAtEnd[0].id).toBeDefined()
   })
-
    test('sending blog without all parametres doesnt go thorugh', async () => {
     const blog = helper.malformBlog
     await api
